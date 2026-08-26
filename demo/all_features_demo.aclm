@@ -1,0 +1,120 @@
+# ============================================================
+# ACLM v0.9.2 — Full Feature Demo (with rich expressions)
+# ============================================================
+
+struct: Point
+  x : i32
+  y : i32
+end:struct
+
+struct: Rect
+  x : i32
+  y : i32
+  w : i32
+  h : i32
+end:struct
+
+data:const banner = "ACLM full-feature demo OK\n"
+data:alloc origin = Point
+data:alloc box = Rect
+
+fn: set_point
+  ram:write32 [rdi + Point.x] = rsi
+  ram:write32 [rdi + Point.y] = rdx
+  ret
+end:fn
+
+fn: point_score
+  local: tmp = 8
+  ram:read32 reg1 = [rdi + Point.x]
+  ram:read32 reg2 = [rdi + Point.y]
+  cpu:set tmp = (reg1 + reg2) * 1
+  ret tmp
+end:fn
+
+fn: make_rect
+  local: rp = 8
+  cpu:set rp = rdi
+  ram:read32 reg8 = [rsi + Point.x]
+  ram:write32 [rp + Rect.x] = reg8
+  ram:read32 reg8 = [rsi + Point.y]
+  ram:write32 [rp + Rect.y] = reg8
+  ram:write32 [rp + Rect.w] = rdx
+  ram:write32 [rp + Rect.h] = rcx
+  ret
+end:fn
+
+fn: rect_area
+  ram:read32 reg1 = [rdi + Rect.w]
+  ram:read32 reg2 = [rdi + Rect.h]
+  cpu:set reg1 = reg1 * reg2
+  ret reg1
+end:fn
+
+# ========== MAIN ==========
+cpu:set reg1 = origin
+cpu:set reg2 = 10
+cpu:set reg3 = 20
+call ~set_point reg1, reg2, reg3
+
+cpu:set reg1 = origin
+call ~point_score reg1
+cmp reg1, 30
+jump_if neq ~fail
+
+# rich expressions for sizes
+cpu:set reg4 = (reg1 - 10) * 2
+cpu:set reg5 = reg1 + 10
+# reg4=40, reg5=40 → area 1600? Wait use 20 and 40
+cpu:set reg4 = reg1 - 10
+cpu:set reg5 = (reg1 + 10)
+
+cpu:set reg1 = box
+cpu:set reg2 = origin
+call ~make_rect reg1, reg2, reg4, reg5
+
+cpu:set reg1 = box
+call ~rect_area reg1
+cmp reg1, 800
+jump_if neq ~fail
+
+cpu:set reg1 = box
+ram:read32 reg6 = [reg1 + Rect.x]
+cmp reg6, 10
+jump_if neq ~fail
+ram:read32 reg6 = [reg1 + Rect.w]
+cmp reg6, 20
+jump_if neq ~fail
+
+# expr + struct size
+cpu:set reg7 = Point * 2
+cmp reg7, 16
+jump_if neq ~fail
+cpu:set reg7 = (Rect + Point) * 1
+cmp reg7, 24
+jump_if neq ~fail
+
+cell:map reg8 = 4096
+cmp reg8, 0
+jump_if lt ~fail
+blast:rep_fill reg8 = 65, 16
+ram:read8 reg9 = [reg8 + 0]
+cmp reg9, 65
+jump_if neq ~fail
+
+cpu:set reg10 = reg8
+cpu:add reg10 = 64
+blast:rep_copy reg10 = reg8, 16
+ram:read8 reg9 = [reg8 + 64]
+cmp reg9, 65
+jump_if neq ~fail
+
+wire:len reg11 = banner
+cmp reg11, 26
+jump_if neq ~fail
+wire:emit banner
+cell:free reg8, 4096
+
+sys:call exit 0
+~fail
+sys:call exit 1
