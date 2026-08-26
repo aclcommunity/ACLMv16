@@ -1,0 +1,20 @@
+# Teach demo — source → bytes (use --teach)
+data:alloc buf = 32
+cpu:set reg1 = buf
+cpu:set reg2 = 2
+cpu:lea reg3 = [reg1 + reg2 * 4 + 8]
+cpu:set reg4 = 0
+cpu:test reg4, reg4
+jump_if zf ~zero
+~zero
+cpu:set reg1 = 5
+cpu:set reg2 = 5
+cmp reg1, reg2
+cpu:set reg3 = 0
+cpu:set reg4 = 42
+cpu:cmov reg3 = reg4, eq
+cmp reg3, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

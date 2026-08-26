@@ -1,0 +1,455 @@
+# ============================================================================
+# ACLM Real-World Stress Program — "Mini Entity Simulator"
+# Exercises: structs, functions, locals, rich expressions, cell/mmap,
+#            blast fill/copy, wire, loops, nested calls, multi-struct
+#            data layout, syscalls, error paths
+# ============================================================================
+
+# ----- type definitions -----
+struct: Vec2
+  x : i32
+  y : i32
+end:struct
+
+struct: Entity
+  id : i32
+  hp : i32
+  pos_x : i32
+  pos_y : i32
+  vel_x : i32
+  vel_y : i32
+  flags : i32
+  pad : i32
+end:struct
+
+struct: World
+  tick : i64
+  count : i32
+  cap : i32
+  score : i32
+end:struct
+
+# Entity size = 32 bytes, we keep up to 8 entities in a table
+data:const msg_ok = "BIG REALWORLD: ALL CHECKS PASSED\n"
+data:const msg_fail = "BIG REALWORLD: FAIL\n"
+data:alloc world = World
+data:alloc ents = 256
+data:alloc scratch = 128
+
+# ============================================================================
+# Library-style helpers
+# ============================================================================
+
+fn: abs_i32
+  # rdi = value → rax = |value|
+  local: v = 8
+  cpu:set v = rdi
+  cmp v, 0
+  jump_if gte ~pos
+  cpu:neg v
+  ~pos
+  ret v
+end:fn
+
+fn: clamp0
+  # rdi = value → max(0, value)
+  cmp rdi, 0
+  jump_if gte ~ok
+  cpu:set reg1 = 0
+  ret reg1
+  ~ok
+  cpu:set reg1 = rdi
+  ret reg1
+end:fn
+
+fn: vec_len2
+  # rdi=x rsi=y → x*x + y*y
+  local: a = 8
+  local: b = 8
+  cpu:set a = rdi
+  cpu:mul a = rdi
+  cpu:set b = rsi
+  cpu:mul b = rsi
+  cpu:set reg1 = a + b
+  ret reg1
+end:fn
+
+fn: entity_offset
+  # rdi = index → byte offset into ents table (index * 32)
+  cpu:set reg1 = rdi * 32
+  ret reg1
+end:fn
+
+fn: entity_ptr
+  # rdi = index → pointer to Entity
+  local: off = 8
+  call ~entity_offset rdi
+  cpu:set off = reg1
+  cpu:set reg1 = ents
+  cpu:add reg1 = off
+  ret reg1
+end:fn
+
+fn: entity_init
+  # rdi=index rsi=id rdx=hp rcx=px r8=py
+  # saves args then writes fields
+  local: idx = 8
+  local: ptr = 8
+  local: eid = 8
+  local: ehp = 8
+  local: epx = 8
+  local: epy = 8
+  cpu:set idx = rdi
+  cpu:set eid = rsi
+  cpu:set ehp = rdx
+  cpu:set epx = rcx
+  cpu:set epy = r8
+  call ~entity_ptr idx
+  cpu:set ptr = reg1
+  ram:write32 [ptr + Entity.id] = eid
+  ram:write32 [ptr + Entity.hp] = ehp
+  ram:write32 [ptr + Entity.pos_x] = epx
+  ram:write32 [ptr + Entity.pos_y] = epy
+  cpu:set reg1 = 0
+  ram:write32 [ptr + Entity.vel_x] = reg1
+  ram:write32 [ptr + Entity.vel_y] = reg1
+  ram:write32 [ptr + Entity.flags] = reg1
+  ret
+end:fn
+
+fn: entity_set_vel
+  # rdi=index rsi=vx rdx=vy
+  local: ptr = 8
+  local: vx = 8
+  local: vy = 8
+  cpu:set vx = rsi
+  cpu:set vy = rdx
+  call ~entity_ptr rdi
+  cpu:set ptr = reg1
+  ram:write32 [ptr + Entity.vel_x] = vx
+  ram:write32 [ptr + Entity.vel_y] = vy
+  ret
+end:fn
+
+fn: entity_step
+  # integrate position by velocity once; return new |pos| rough metric
+  local: ptr = 8
+  local: px = 8
+  local: py = 8
+  local: vx = 8
+  local: vy = 8
+  call ~entity_ptr rdi
+  cpu:set ptr = reg1
+  ram:read32 px = [ptr + Entity.pos_x]
+  ram:read32 py = [ptr + Entity.pos_y]
+  ram:read32 vx = [ptr + Entity.vel_x]
+  ram:read32 vy = [ptr + Entity.vel_y]
+  cpu:set px = px + vx
+  cpu:set py = py + vy
+  ram:write32 [ptr + Entity.pos_x] = px
+  ram:write32 [ptr + Entity.pos_y] = py
+  # metric = |px| + |py|
+  cpu:set reg1 = px
+  call ~abs_i32 reg1
+  cpu:set px = reg1
+  cpu:set reg1 = py
+  call ~abs_i32 reg1
+  cpu:set reg1 = px + reg1
+  ret reg1
+end:fn
+
+fn: entity_damage
+  # rdi=index rsi=dmg → remaining hp (clamped)
+  local: ptr = 8
+  local: hp = 8
+  local: dmg = 8
+  cpu:set dmg = rsi
+  call ~entity_ptr rdi
+  cpu:set ptr = reg1
+  ram:read32 hp = [ptr + Entity.hp]
+  cpu:set hp = hp - dmg
+  call ~clamp0 hp
+  cpu:set hp = reg1
+  ram:write32 [ptr + Entity.hp] = hp
+  ret hp
+end:fn
+
+fn: world_init
+  cpu:set reg1 = world
+  cpu:set reg2 = 0
+  ram:write [reg1 + World.tick] = reg2
+  ram:write32 [reg1 + World.count] = reg2
+  cpu:set reg2 = 8
+  ram:write32 [reg1 + World.cap] = reg2
+  cpu:set reg2 = 0
+  ram:write32 [reg1 + World.score] = reg2
+  ret
+end:fn
+
+fn: world_add_score
+  # rdi = delta
+  local: w = 8
+  local: s = 8
+  cpu:set w = world
+  ram:read32 s = [w + World.score]
+  cpu:set s = s + rdi
+  ram:write32 [w + World.score] = s
+  ret s
+end:fn
+
+fn: world_tick
+  local: w = 8
+  local: t = 8
+  cpu:set w = world
+  ram:read t = [w + World.tick]
+  cpu:set t = t + 1
+  ram:write [w + World.tick] = t
+  ret t
+end:fn
+
+fn: sum_hp
+  # sum hp of first N entities (N in rdi)
+  local: n = 8
+  local: i = 8
+  local: acc = 8
+  local: ptr = 8
+  local: hp = 8
+  cpu:set n = rdi
+  cpu:set i = 0
+  cpu:set acc = 0
+  ~loop
+  cmp i, n
+  jump_if gte ~done
+  call ~entity_ptr i
+  cpu:set ptr = reg1
+  ram:read32 hp = [ptr + Entity.hp]
+  cpu:set acc = acc + hp
+  cpu:set i = i + 1
+  goto ~loop
+  ~done
+  ret acc
+end:fn
+
+fn: fill_pattern
+  # rdi=ptr rsi=len rdx=byte — uses blast
+  blast:rep_fill rdi = rdx, rsi
+  ret
+end:fn
+
+fn: checksum8
+  # rdi=ptr rsi=len → sum of bytes
+  local: p = 8
+  local: n = 8
+  local: acc = 8
+  local: b = 8
+  cpu:set p = rdi
+  cpu:set n = rsi
+  cpu:set acc = 0
+  ~cloop
+  cmp n, 0
+  jump_if eq ~cdone
+  ram:read8 b = [p + 0]
+  cpu:set acc = acc + b
+  cpu:set p = p + 1
+  cpu:set n = n - 1
+  goto ~cloop
+  ~cdone
+  ret acc
+end:fn
+
+# ============================================================================
+# MAIN SCENARIO
+# ============================================================================
+
+# --- A: init world ---
+call ~world_init
+
+# --- B: spawn 4 entities with different stats ---
+# index 0: id=1 hp=100 pos(0,0)
+cpu:set reg1 = 0
+cpu:set reg2 = 1
+cpu:set reg3 = 100
+cpu:set reg4 = 0
+cpu:set reg5 = 0
+call ~entity_init reg1, reg2, reg3, reg4, reg5
+cpu:set reg1 = 0
+cpu:set reg2 = 2
+cpu:set reg3 = 1
+call ~entity_set_vel reg1, reg2, reg3
+
+# index 1: id=2 hp=80 pos(5,5)
+cpu:set reg1 = 1
+cpu:set reg2 = 2
+cpu:set reg3 = 80
+cpu:set reg4 = 5
+cpu:set reg5 = 5
+call ~entity_init reg1, reg2, reg3, reg4, reg5
+cpu:set reg1 = 1
+cpu:set reg2 = -1
+cpu:set reg3 = 2
+call ~entity_set_vel reg1, reg2, reg3
+
+# index 2: id=3 hp=50 pos(10,0)
+cpu:set reg1 = 2
+cpu:set reg2 = 3
+cpu:set reg3 = 50
+cpu:set reg4 = 10
+cpu:set reg5 = 0
+call ~entity_init reg1, reg2, reg3, reg4, reg5
+
+# index 3: id=4 hp=120 pos(-3,7)
+cpu:set reg1 = 3
+cpu:set reg2 = 4
+cpu:set reg3 = 120
+cpu:set reg4 = -3
+cpu:set reg5 = 7
+call ~entity_init reg1, reg2, reg3, reg4, reg5
+cpu:set reg1 = 3
+cpu:set reg2 = 3
+cpu:set reg3 = -2
+call ~entity_set_vel reg1, reg2, reg3
+
+cpu:set reg1 = world
+cpu:set reg2 = 4
+ram:write32 [reg1 + World.count] = reg2
+
+# --- C: verify entity 0 fields ---
+call ~entity_ptr 0
+cpu:set reg8 = reg1
+ram:read32 reg9 = [reg8 + Entity.id]
+cmp reg9, 1
+jump_if neq ~fail
+ram:read32 reg9 = [reg8 + Entity.hp]
+cmp reg9, 100
+jump_if neq ~fail
+
+# --- D: run 5 simulation ticks ---
+cpu:set reg12 = 0
+~sim
+cmp reg12, 5
+jump_if gte ~sim_done
+call ~world_tick
+# step entities 0 and 1 and 3 (those with velocity)
+call ~entity_step 0
+call ~entity_step 1
+call ~entity_step 3
+cpu:set reg12 = reg12 + 1
+goto ~sim
+~sim_done
+
+# after 5 ticks: e0 pos should be (10, 5)  because vel (2,1)*5
+call ~entity_ptr 0
+cpu:set reg8 = reg1
+ram:read32 reg9 = [reg8 + Entity.pos_x]
+cmp reg9, 10
+jump_if neq ~fail
+ram:read32 reg9 = [reg8 + Entity.pos_y]
+cmp reg9, 5
+jump_if neq ~fail
+
+# e1: start (5,5) vel (-1,2)*5 → (0, 15)
+call ~entity_ptr 1
+cpu:set reg8 = reg1
+ram:read32 reg9 = [reg8 + Entity.pos_x]
+cmp reg9, 0
+jump_if neq ~fail
+ram:read32 reg9 = [reg8 + Entity.pos_y]
+cmp reg9, 15
+jump_if neq ~fail
+
+# --- E: damage entity 2 by 20 → hp 30 ---
+cpu:set reg1 = 2
+cpu:set reg2 = 20
+call ~entity_damage reg1, reg2
+cmp reg1, 30
+jump_if neq ~fail
+
+# over-damage entity 2 by 100 → clamp to 0
+cpu:set reg1 = 2
+cpu:set reg2 = 100
+call ~entity_damage reg1, reg2
+cmp reg1, 0
+jump_if neq ~fail
+
+# --- F: sum HP of 4 entities: 100+80+0+120 = 300 ---
+call ~sum_hp 4
+cmp reg1, 300
+jump_if neq ~fail
+
+# --- G: score updates with expressions ---
+cpu:set reg1 = (10 + 5) * 2
+call ~world_add_score reg1
+cmp reg1, 30
+jump_if neq ~fail
+cpu:set reg1 = 70
+call ~world_add_score reg1
+cmp reg1, 100
+jump_if neq ~fail
+
+# --- H: world tick count == 5 ---
+cpu:set reg1 = world
+ram:read reg2 = [reg1 + World.tick]
+cmp reg2, 5
+jump_if neq ~fail
+
+# --- I: mmap arena + pattern fill + checksum ---
+cell:map reg8 = 8192
+cmp reg8, 0
+jump_if lt ~fail
+cpu:set reg1 = reg8
+cpu:set reg2 = 64
+cpu:set reg3 = 7
+call ~fill_pattern reg1, reg2, reg3
+call ~checksum8 reg8, 64
+# 64 * 7 = 448
+cmp reg1, 448
+jump_if neq ~fail
+
+# copy block and verify
+cpu:set reg10 = reg8
+cpu:add reg10 = 128
+blast:rep_copy reg10 = reg8, 64
+call ~checksum8 reg10, 64
+cmp reg1, 448
+jump_if neq ~fail
+
+# --- J: vec_len2 sanity (3,4) → 25 ---
+cpu:set reg1 = 3
+cpu:set reg2 = 4
+call ~vec_len2 reg1, reg2
+cmp reg1, 25
+jump_if neq ~fail
+
+# --- K: struct sizes ---
+cpu:set reg1 = Entity
+cmp reg1, 32
+jump_if neq ~fail
+cpu:set reg1 = Vec2 * 4
+cmp reg1, 32
+jump_if neq ~fail
+cpu:set reg1 = (Entity + World)
+# Entity 32 + World (8+4+4+4=20) = 52
+cmp reg1, 52
+jump_if neq ~fail
+
+# --- L: nested abs ---
+cpu:set reg1 = -42
+call ~abs_i32 reg1
+cmp reg1, 42
+jump_if neq ~fail
+
+# --- M: free arena ---
+cell:free reg8, 8192
+
+# --- N: final score still 100 ---
+cpu:set reg1 = world
+ram:read32 reg2 = [reg1 + World.score]
+cmp reg2, 100
+jump_if neq ~fail
+
+wire:emit msg_ok
+sys:call exit 0
+
+~fail
+wire:emit msg_fail
+sys:call exit 1

@@ -1,0 +1,394 @@
+# ACLM Real-World Stress Program — Record Store + Arena (~400 lines)
+struct: Record
+  id : i64
+  price : i64
+  qty : i64
+  flags : i64
+end:struct
+struct: Arena
+  base : i64
+  used : i64
+  cap : i64
+end:struct
+struct: Stats
+  count : i64
+  total : i64
+  maxp : i64
+  minp : i64
+end:struct
+
+data:const msg_ok = "REALWORLD BIG PROGRAM OK\n"
+data:const msg_fail = "REALWORLD FAIL\n"
+data:alloc arena = Arena
+data:alloc stats = Stats
+data:alloc rec0 = Record
+data:alloc rec1 = Record
+data:alloc rec2 = Record
+data:alloc rec3 = Record
+data:alloc rec4 = Record
+data:alloc rec5 = Record
+data:alloc rec6 = Record
+data:alloc rec7 = Record
+data:alloc saved_ptr = 8
+
+fn: arena_init
+  cpu:set reg12 = rdi
+  cpu:set reg13 = rsi
+  cell:map reg8 = reg13
+  cmp reg8, 0
+  jump_if lt ~ai_fail
+  ram:write [reg12 + Arena.base] = reg8
+  cpu:set reg9 = 0
+  ram:write [reg12 + Arena.used] = reg9
+  ram:write [reg12 + Arena.cap] = reg13
+  cpu:set reg1 = 0
+  ret reg1
+~ai_fail
+  cpu:set reg1 = 1
+  ret reg1
+end:fn
+
+fn: arena_alloc
+  cpu:set reg12 = rdi
+  ram:read reg1 = [reg12 + Arena.used]
+  ram:read reg2 = [reg12 + Arena.cap]
+  cpu:set reg3 = reg1 + rsi
+  cmp reg3, reg2
+  jump_if gt ~aa_oom
+  ram:read reg4 = [reg12 + Arena.base]
+  cpu:set reg5 = reg4 + reg1
+  ram:write [reg12 + Arena.used] = reg3
+  cpu:set reg1 = reg5
+  ret reg1
+~aa_oom
+  cpu:set reg1 = 0
+  ret reg1
+end:fn
+
+fn: arena_free
+  ram:read reg1 = [rdi + Arena.base]
+  ram:read reg2 = [rdi + Arena.cap]
+  cell:free reg1, reg2
+  ret
+end:fn
+
+fn: record_init
+  ram:write [rdi + Record.id] = rsi
+  ram:write [rdi + Record.price] = rdx
+  ram:write [rdi + Record.qty] = rcx
+  cpu:set reg8 = 0
+  ram:write [rdi + Record.flags] = reg8
+  ret
+end:fn
+
+fn: record_value
+  ram:read reg1 = [rdi + Record.price]
+  ram:read reg2 = [rdi + Record.qty]
+  cpu:set reg1 = reg1 * reg2
+  ret reg1
+end:fn
+
+fn: record_apply_discount
+  ram:read reg1 = [rdi + Record.price]
+  cpu:set reg2 = reg1 * rsi
+  cpu:div reg2 = 100
+  cpu:set reg1 = reg1 - reg2
+  ram:write [rdi + Record.price] = reg1
+  ret
+end:fn
+
+fn: record_flag_set
+  ram:read reg1 = [rdi + Record.flags]
+  cpu:set reg2 = 1
+  cpu:shl reg2 = rsi
+  cpu:or reg1 = reg2
+  ram:write [rdi + Record.flags] = reg1
+  ret
+end:fn
+
+fn: record_flag_has
+  ram:read reg1 = [rdi + Record.flags]
+  cpu:set reg2 = 1
+  cpu:shl reg2 = rsi
+  cpu:and reg1 = reg2
+  cmp reg1, 0
+  jump_if eq ~rfh0
+  cpu:set reg1 = 1
+  ret reg1
+~rfh0
+  cpu:set reg1 = 0
+  ret reg1
+end:fn
+
+fn: stats_init
+  cpu:set reg8 = 0
+  ram:write [rdi + Stats.count] = reg8
+  ram:write [rdi + Stats.total] = reg8
+  ram:write [rdi + Stats.maxp] = reg8
+  cpu:set reg8 = 0x7FFFFFFF
+  ram:write [rdi + Stats.minp] = reg8
+  ret
+end:fn
+
+fn: stats_add
+  cpu:set reg12 = rdi
+  cpu:set reg13 = rsi
+  ram:read reg1 = [reg12 + Stats.count]
+  cpu:add reg1 = 1
+  ram:write [reg12 + Stats.count] = reg1
+  ram:read reg1 = [reg12 + Stats.total]
+  cpu:add reg1 = reg13
+  ram:write [reg12 + Stats.total] = reg1
+  ram:read reg1 = [reg12 + Stats.maxp]
+  cmp reg13, reg1
+  jump_if lte ~sa_skipmax
+  ram:write [reg12 + Stats.maxp] = reg13
+~sa_skipmax
+  ram:read reg1 = [reg12 + Stats.minp]
+  cmp reg13, reg1
+  jump_if gte ~sa_skipmin
+  ram:write [reg12 + Stats.minp] = reg13
+~sa_skipmin
+  ret
+end:fn
+
+fn: stats_avg
+  ram:read reg1 = [rdi + Stats.total]
+  ram:read reg2 = [rdi + Stats.count]
+  cmp reg2, 0
+  jump_if eq ~sav0
+  cpu:div reg1 = reg2
+  ret reg1
+~sav0
+  cpu:set reg1 = 0
+  ret reg1
+end:fn
+
+fn: fill_pattern
+  blast:rep_fill rdi = rdx, rsi
+  ret
+end:fn
+
+fn: checksum8
+  cpu:set reg10 = 0
+  cpu:set reg11 = 0
+  cpu:set reg12 = rdi
+  cpu:set reg13 = rsi
+~cs_loop
+  cmp reg11, reg13
+  jump_if gte ~cs_done
+  ram:read8 reg8 = [reg12 + 0]
+  cpu:add reg10 = reg8
+  cpu:add reg12 = 1
+  cpu:add reg11 = 1
+  goto ~cs_loop
+~cs_done
+  cpu:set reg1 = reg10
+  ret reg1
+end:fn
+
+# MAIN
+cpu:set reg1 = arena
+cpu:set reg2 = 8192
+call ~arena_init reg1, reg2
+cmp reg1, 0
+jump_if neq ~fail
+
+cpu:set reg1 = stats
+call ~stats_init reg1
+
+cpu:set reg1 = rec0
+cpu:set reg2 = 1001
+cpu:set reg3 = 50
+cpu:set reg4 = 2
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec1
+cpu:set reg2 = 1002
+cpu:set reg3 = 120
+cpu:set reg4 = 1
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec2
+cpu:set reg2 = 1003
+cpu:set reg3 = 30
+cpu:set reg4 = 5
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec3
+cpu:set reg2 = 1004
+cpu:set reg3 = 200
+cpu:set reg4 = 1
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec4
+cpu:set reg2 = 1005
+cpu:set reg3 = 15
+cpu:set reg4 = 10
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec5
+cpu:set reg2 = 1006
+cpu:set reg3 = 80
+cpu:set reg4 = 3
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec6
+cpu:set reg2 = 1007
+cpu:set reg3 = 45
+cpu:set reg4 = 4
+call ~record_init reg1, reg2, reg3, reg4
+cpu:set reg1 = rec7
+cpu:set reg2 = 1008
+cpu:set reg3 = 60
+cpu:set reg4 = 2
+call ~record_init reg1, reg2, reg3, reg4
+
+cpu:set reg1 = rec3
+cpu:set reg2 = 10
+call ~record_apply_discount reg1, reg2
+cpu:set reg1 = rec3
+ram:read reg5 = [reg1 + Record.price]
+cmp reg5, 180
+jump_if neq ~fail
+
+cpu:set reg1 = rec0
+cpu:set reg2 = 0
+call ~record_flag_set reg1, reg2
+cpu:set reg1 = rec0
+cpu:set reg2 = 0
+call ~record_flag_has reg1, reg2
+cmp reg1, 1
+jump_if neq ~fail
+
+cpu:set reg1 = rec0
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec1
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec2
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec3
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec4
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec5
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec6
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+cpu:set reg1 = rec7
+call ~record_value reg1
+cpu:set reg2 = reg1
+cpu:set reg1 = stats
+call ~stats_add reg1, reg2
+
+cpu:set reg1 = stats
+ram:read reg2 = [reg1 + Stats.count]
+cmp reg2, 8
+jump_if neq ~fail
+ram:read reg2 = [reg1 + Stats.total]
+cmp reg2, 1240
+jump_if neq ~fail
+call ~stats_avg reg1
+cmp reg1, 155
+jump_if neq ~fail
+
+cpu:set reg1 = arena
+cpu:set reg2 = 256
+call ~arena_alloc reg1, reg2
+cmp reg1, 0
+jump_if eq ~fail
+cpu:set reg8 = reg1
+cpu:set reg1 = reg8
+cpu:set reg2 = 256
+cpu:set reg3 = 7
+call ~fill_pattern reg1, reg2, reg3
+cpu:set reg1 = reg8
+cpu:set reg2 = 256
+call ~checksum8 reg1, reg2
+cmp reg1, 1792
+jump_if neq ~fail
+
+cpu:set reg1 = arena
+cpu:set reg2 = 256
+call ~arena_alloc reg1, reg2
+cmp reg1, 0
+jump_if eq ~fail
+cpu:set reg1 = stats
+ram:read reg2 = [reg1 + Stats.maxp]
+cmp reg2, 240
+jump_if neq ~fail
+ram:read reg2 = [reg1 + Stats.minp]
+cmp reg2, 100
+jump_if neq ~fail
+
+cpu:set reg1 = (10 + 5) * 3
+cmp reg1, 45
+jump_if neq ~fail
+cpu:set reg1 = Record * 2
+cmp reg1, 64
+jump_if neq ~fail
+cpu:set reg1 = (Arena + Stats) * 1
+cmp reg1, 56
+jump_if neq ~fail
+cpu:set reg1 = 2 * 3 * 4
+cmp reg1, 24
+jump_if neq ~fail
+cpu:set reg1 = ((7 + 1) * (9 - 1)) - 4
+cmp reg1, 60
+jump_if neq ~fail
+
+cpu:set reg1 = 0
+cpu:set reg2 = 0
+~loop_top
+cmp reg2, 10
+jump_if gte ~loop_done
+cpu:set reg1 = reg1 + (reg2 + 1)
+cpu:add reg2 = 1
+goto ~loop_top
+~loop_done
+cmp reg1, 55
+jump_if neq ~fail
+
+cpu:set reg1 = 0
+cpu:set reg2 = 1
+~loop2
+cmp reg2, 20
+jump_if gt ~loop2_done
+cpu:add reg1 = reg2
+cpu:add reg2 = 1
+goto ~loop2
+~loop2_done
+cmp reg1, 210
+jump_if neq ~fail
+
+cpu:set reg1 = rec0
+call ~record_value reg1
+cmp reg1, 100
+jump_if neq ~fail
+cpu:set reg1 = rec5
+call ~record_value reg1
+cmp reg1, 240
+jump_if neq ~fail
+
+wire:emit msg_ok
+cpu:set reg1 = arena
+call ~arena_free reg1
+sys:call exit 0
+~fail
+wire:emit msg_fail
+sys:call exit 1
