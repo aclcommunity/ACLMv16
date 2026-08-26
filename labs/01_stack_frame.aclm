@@ -1,0 +1,19 @@
+# Lab 01 — Stack frame
+# Build: python3 -m aclm.compiler build labs/01_stack_frame.aclm --teach -o ./lab01 && ./lab01
+# Read .lst → frame diagram [rbp-8]=t
+
+fn: sum a b
+  local: t = 8
+  cpu:set t = a
+  cpu:add t = b
+  ret t
+end:fn
+
+cpu:set reg1 = 20
+cpu:set reg2 = 22
+call ~sum reg1, reg2
+cmp reg1, 42
+jump_if neq ~fail
+sys:call exit 0
+~fail
+sys:call exit 1

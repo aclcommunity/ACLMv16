@@ -1,0 +1,7 @@
+# Lab 05 — std/ includes
+include: "print.aclm"
+include: "exit.aclm"
+
+data:const hi = "std include OK\n"
+println hi
+exit0

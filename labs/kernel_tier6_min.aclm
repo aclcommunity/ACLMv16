@@ -1,0 +1,15 @@
+target:baremetal
+chip:serial_init
+chip:pic_remap
+chip:pit_init 11932
+kernel:idt_install
+kernel:pf_install
+kernel:irq_full_save_on
+kernel:tick_install
+kernel:syscall_init
+kernel:net_init
+kernel:net_allow_port 22
+data:const hi = "tier6 syscall+irq-save+nic-mmio\n"
+kernel:printk_str hi
+chip:cli
+chip:halt

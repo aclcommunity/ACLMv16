@@ -1,0 +1,11 @@
+# Minimal freestanding bring-up sketch (build + QEMU Multiboot)
+target:baremetal
+chip:serial_init
+chip:pic_remap
+chip:pit_init 11932
+kernel:idt_install
+data:const hi = "ACLM kernel tier3\n"
+kernel:printk_str hi
+kernel:heap_init 4096
+chip:cli
+chip:halt

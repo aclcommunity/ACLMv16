@@ -1,0 +1,13 @@
+target:baremetal
+chip:serial_init
+kernel:idt_install
+kernel:nmi_install
+kernel:syscall_table_init
+kernel:syscall_init
+kernel:dma_ring_init 16
+kernel:irq_full_save_on
+kernel:tick_install
+data:const hi = "tier7 systab+nmi+dma\n"
+kernel:printk_str hi
+chip:cli
+chip:halt

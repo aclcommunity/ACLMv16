@@ -1,0 +1,26 @@
+# Lab 03 — Struct packing / field offsets
+# --teach lists: struct Pt size=8: x@+0, y@+4
+
+struct: Pt
+  x : i32
+  y : i32
+end:struct
+
+data:alloc p = Pt
+cpu:set reg1 = p
+cpu:set reg2 = 11
+ram:write32 [reg1 + Pt.x] = reg2
+cpu:set reg2 = 22
+ram:write32 [reg1 + Pt.y] = reg2
+ram:read32 reg3 = [reg1 + Pt.x]
+cmp reg3, 11
+jump_if neq ~f
+ram:read32 reg3 = [reg1 + Pt.y]
+cmp reg3, 22
+jump_if neq ~f
+cpu:set reg1 = Pt
+cmp reg1, 8
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

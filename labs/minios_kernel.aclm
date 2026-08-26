@@ -1,0 +1,107 @@
+# ACLM MiniOS kernel — Multiboot, serial terminal, ramfs
+# commands demo: mkdir/cd style via ramfs slots, mkfile, cat, nano
+
+target:baremetal
+chip:serial_init
+
+data:const ban = "ACLM MiniOS (boot)\n"
+data:const s1 = "$ mkdir projects\n"
+data:const s2 = "$ mkdir docs\n"
+data:const s3 = "$ ls\n"
+data:const s4 = "$ mkfile hello.txt\n"
+data:const s5 = "$ cat hello.txt\n"
+data:const s6 = "$ nano edit.txt\n"
+data:const s7 = "$ cat edit.txt\n"
+data:const s8 = "$ ls\n"
+data:const ok = "  [ok]\n"
+data:const nl = "\n"
+data:const sep = "----\n"
+data:const n_proj = "projects"
+data:const n_docs = "docs"
+data:const n_hello = "hello.txt"
+data:const n_edit = "edit.txt"
+data:const body1 = "hello from mkfile\n"
+data:const body2 = "line1 nano\nline2 edited\n"
+data:const empty = ""
+
+kernel:printk_str ban
+kernel:ramfs_init
+
+# mkdir projects / docs = ramfs_put name with empty data (dir marker)
+kernel:printk_str s1
+cpu:set reg2 = empty
+kernel:ramfs_put n_proj, reg2, 0
+kernel:printk_str ok
+
+kernel:printk_str s2
+cpu:set reg2 = empty
+kernel:ramfs_put n_docs, reg2, 0
+kernel:printk_str ok
+
+# ls — print known names we stored (ramfs has no iterate API; show puts)
+kernel:printk_str s3
+kernel:printk_str n_docs
+kernel:printk_str nl
+kernel:printk_str n_proj
+kernel:printk_str nl
+kernel:printk_str ok
+
+# mkfile hello.txt
+kernel:printk_str s4
+cpu:set reg2 = body1
+wire:len reg3 = body1
+kernel:ramfs_put n_hello, reg2, reg3
+kernel:printk_str ok
+
+# cat hello.txt
+kernel:printk_str s5
+kernel:printk_str sep
+kernel:ramfs_get reg1 = n_hello
+cmp reg1, 0
+jump_if eq ~c1fail
+kernel:printk_str body1
+kernel:printk_str sep
+kernel:printk_str ok
+goto ~c1ok
+~c1fail
+data:const err = "  [error]\n"
+kernel:printk_str err
+~c1ok
+
+# nano edit.txt
+kernel:printk_str s6
+cpu:set reg2 = body2
+wire:len reg3 = body2
+kernel:ramfs_put n_edit, reg2, reg3
+kernel:printk_str ok
+
+# cat edit.txt
+kernel:printk_str s7
+kernel:printk_str sep
+kernel:ramfs_get reg1 = n_edit
+cmp reg1, 0
+jump_if eq ~c2fail
+kernel:printk_str body2
+kernel:printk_str sep
+kernel:printk_str ok
+goto ~c2ok
+~c2fail
+kernel:printk_str err
+~c2ok
+
+# ls final
+kernel:printk_str s8
+kernel:printk_str n_docs
+kernel:printk_str nl
+kernel:printk_str n_edit
+kernel:printk_str nl
+kernel:printk_str n_hello
+kernel:printk_str nl
+kernel:printk_str n_proj
+kernel:printk_str nl
+kernel:printk_str ok
+
+data:const bye = "[MiniOS] halt\n"
+kernel:printk_str bye
+chip:cli
+chip:halt

@@ -1,0 +1,6 @@
+# Lab 02 — Syscall write + exit
+# wire:emit is write(1, buf, len) under the hood
+
+data:const msg = "syscall lab OK\n"
+wire:emit msg
+sys:call exit 0

@@ -1,0 +1,14 @@
+target:baremetal
+chip:serial_init
+chip:pic_remap
+chip:pit_init 11932
+kernel:idt_install
+kernel:pf_install
+kernel:tick_install
+kernel:ramfs_init
+kernel:net_init
+kernel:net_allow_port 22
+data:const hi = "tier5 secure-net-default-deny\n"
+kernel:printk_str hi
+chip:cli
+chip:halt
