@@ -1,0 +1,12 @@
+# std/exit.aclm — exit macros
+macro: exit0
+sys:call exit 0
+end:macro
+
+macro: exit1
+sys:call exit 1
+end:macro
+
+macro: exit_code c
+sys:call exit $c
+end:macro

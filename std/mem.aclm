@@ -1,0 +1,12 @@
+# std/mem.aclm — memory helpers via blast
+# include: "mem.aclm"
+# fill_bytes ptr byte len  —  blast:rep_fill
+# copy_bytes dst src len
+
+macro: fill_bytes ptr byte len
+blast:rep_fill $ptr = $byte, $len
+end:macro
+
+macro: copy_bytes dst src len
+blast:rep_copy $dst = $src, $len
+end:macro

@@ -1,0 +1,10 @@
+# std/print.aclm — I/O helpers (include only; no side effects)
+# include: "print.aclm"
+
+macro: println s
+wire:emit $s
+end:macro
+
+macro: print_str s
+wire:emit $s
+end:macro
