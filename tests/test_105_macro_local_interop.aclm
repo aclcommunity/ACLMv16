@@ -1,0 +1,13 @@
+macro: add2 dest
+cpu:add $dest = 2
+end:macro
+cpu:set reg1 = 0
+~@again
+add2 reg1
+cmp reg1, 10
+jump_if lt ~@again
+cmp reg1, 10
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

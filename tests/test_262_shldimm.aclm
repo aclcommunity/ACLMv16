@@ -1,0 +1,6 @@
+cpu:set reg1 = 0x10
+cpu:set reg2 = 0x0F
+cpu:shldimm reg1, reg2, 4
+# just run
+cpu:shrdimm reg1, reg2, 4
+sys:call exit 0

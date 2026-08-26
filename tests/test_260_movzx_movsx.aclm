@@ -1,0 +1,13 @@
+cpu:set reg2 = 0x1FF
+cpu:movzx reg1 = reg2, 8
+cmp reg1, 0xFF
+jump_if eq ~ok1
+sys:call exit 1
+~ok1
+cpu:set reg2 = 0x80
+cpu:movsx reg1 = reg2, 8
+cmp reg1, -128
+jump_if eq ~ok2
+sys:call exit 2
+~ok2
+sys:call exit 0

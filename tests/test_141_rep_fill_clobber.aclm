@@ -1,0 +1,24 @@
+# Hard: dest/byte/len live in fixed regs of rep stosb; dest must be restored
+data:alloc buf = 64
+cpu:set rdi = buf
+cpu:set rax = 65
+cpu:set rcx = 8
+blast:rep_fill rdi = rax, rcx
+ram:read8 reg5 = [buf + 0]
+cmp reg5, 65
+jump_if neq ~f
+ram:read8 reg8 = [buf + 7]
+cmp reg8, 65
+jump_if neq ~f
+# dest (rdi) must still be original pointer
+cpu:set reg2 = buf
+cmp rdi, reg2
+jump_if neq ~f
+cpu:set reg1 = buf
+blast:rep_fill reg1 = 66, 4
+ram:read8 reg7 = [buf + 0]
+cmp reg7, 66
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

@@ -1,0 +1,7 @@
+# document/verify: reg1 aliases rax
+cpu:set reg1 = 42
+cmp rax, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

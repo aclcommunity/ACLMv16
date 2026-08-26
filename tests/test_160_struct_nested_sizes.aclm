@@ -1,0 +1,41 @@
+# Nested-style fields, mixed sizes, alloc by struct name, offsetof chain
+struct: Header
+  magic : u32
+  ver : u16
+  flags : u16
+end:struct
+struct: Packet
+  hdr_magic : u32
+  hdr_ver : u16
+  hdr_flags : u16
+  payload0 : i64
+  payload1 : i64
+end:struct
+data:alloc pkt = Packet
+cpu:set reg1 = pkt
+cpu:set reg2 = 0xDEADBEEF
+ram:write32 [reg1 + Packet.hdr_magic] = reg2
+cpu:set reg3 = 1
+ram:write16 [reg1 + Packet.hdr_ver] = reg3
+cpu:set reg4 = 0xABCD
+ram:write16 [reg1 + Packet.hdr_flags] = reg4
+cpu:set reg5 = 100
+ram:write [reg1 + Packet.payload0] = reg5
+cpu:set reg6 = 200
+ram:write [reg1 + Packet.payload1] = reg6
+ram:read32 reg7 = [reg1 + Packet.hdr_magic]
+cmp reg7, 0xDEADBEEF
+jump_if neq ~f
+ram:read16 reg8 = [reg1 + Packet.hdr_ver]
+cmp reg8, 1
+jump_if neq ~f
+ram:read reg9 = [reg1 + Packet.payload1]
+cmp reg9, 200
+jump_if neq ~f
+# struct size as value
+cpu:set reg10 = Packet
+cmp reg10, 24
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

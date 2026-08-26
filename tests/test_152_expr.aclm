@@ -1,0 +1,11 @@
+cpu:set reg1 = 10
+cpu:set reg2 = 5
+cpu:set reg3 = reg1 + reg2
+cmp reg3, 15
+jump_if neq ~f
+cpu:set reg4 = reg3 - 3
+cmp reg4, 12
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

@@ -1,0 +1,6 @@
+cpu:set reg2 = 0xF0F0
+cpu:set reg3 = 0x00FF
+cpu:pext reg1 = reg2, reg3
+# extract low bits of pattern under mask
+cpu:pdep reg1 = reg2, reg3
+sys:call exit 0

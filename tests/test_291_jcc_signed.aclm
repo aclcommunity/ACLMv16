@@ -1,0 +1,9 @@
+cpu:set reg2 = -1
+cmp reg2, 0
+jump_if lt ~ok
+sys:call exit 1
+~ok
+jump_if lte ~ok2
+sys:call exit 2
+~ok2
+sys:call exit 0

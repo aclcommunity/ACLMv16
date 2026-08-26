@@ -1,0 +1,17 @@
+macro: double x
+cpu:set reg9 = $x
+cpu:set reg9 = reg9 * 2
+end:macro
+
+macro: quad x
+double $x
+cpu:set reg9 = reg9 * 2
+end:macro
+
+cpu:set reg1 = 3
+quad reg1
+cmp reg9, 12
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

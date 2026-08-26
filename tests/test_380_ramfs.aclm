@@ -1,0 +1,11 @@
+kernel:ramfs_init
+data:const n = "a"
+data:const d = "XY"
+cpu:set reg2 = d
+kernel:ramfs_put n, reg2, 2
+kernel:ramfs_get reg1 = n
+cmp reg1, 0
+jump_if eq ~bad
+sys:call exit 0
+~bad
+sys:call exit 1

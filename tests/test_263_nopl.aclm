@@ -1,0 +1,3 @@
+cpu:nopl
+cpu:nopl
+sys:call exit 0

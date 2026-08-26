@@ -1,0 +1,10 @@
+# reg3 is rcx — must not use reg3 as SHLD src while setting count in rcx
+cpu:set reg11 = 0x0F
+cpu:set reg12 = 0xF000000000000000
+cpu:set rcx = 4
+cpu:shld reg11, reg12
+cmp reg11, 0xFF
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

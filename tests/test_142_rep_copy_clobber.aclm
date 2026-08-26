@@ -1,0 +1,22 @@
+# Hard: dest/src/len live in rdi/rsi/rcx; dest restored, data correct
+data:alloc a = 32
+data:alloc b = 32
+cpu:set reg1 = a
+blast:rep_fill reg1 = 65, 8
+cpu:set rdi = b
+cpu:set rsi = a
+cpu:set rcx = 8
+blast:rep_copy rdi = rsi, rcx
+ram:read8 reg5 = [b + 0]
+cmp reg5, 65
+jump_if neq ~f
+ram:read8 reg8 = [b + 7]
+cmp reg8, 65
+jump_if neq ~f
+# dest (rdi) restored to original b
+cpu:set reg2 = b
+cmp rdi, reg2
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

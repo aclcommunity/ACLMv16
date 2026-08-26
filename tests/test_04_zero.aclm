@@ -1,0 +1,6 @@
+cpu:set reg7 = 0
+cmp reg7, 0
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

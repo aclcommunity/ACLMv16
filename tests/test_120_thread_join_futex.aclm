@@ -1,0 +1,5 @@
+thread:spawn reg1 = ~worker
+thread:join reg1
+sys:call exit 0
+~worker
+thread:exit 0

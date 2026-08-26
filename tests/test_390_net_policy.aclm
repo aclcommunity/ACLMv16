@@ -1,0 +1,12 @@
+kernel:net_allow_port 22
+kernel:net_check_port reg1 = 22
+cmp reg1, 1
+jump_if eq ~a
+sys:call exit 1
+~a
+kernel:net_check_port reg1 = 80
+cmp reg1, 0
+jump_if eq ~b
+sys:call exit 2
+~b
+sys:call exit 0

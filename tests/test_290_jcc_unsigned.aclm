@@ -1,0 +1,10 @@
+cpu:set reg2 = -1
+cmp reg2, 0
+# unsigned: -1 is above 0
+jump_if above ~ok
+sys:call exit 1
+~ok
+jump_if abe ~ok2
+sys:call exit 2
+~ok2
+sys:call exit 0

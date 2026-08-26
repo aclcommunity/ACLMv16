@@ -1,0 +1,11 @@
+# poll with nfds=0, timeout 1ms — returns 0
+data:alloc fds = 16
+cpu:set reg11 = fds
+cpu:set reg12 = 0
+cpu:set reg13 = 1
+net:poll reg11, reg12, reg13
+cmp rax, 0
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

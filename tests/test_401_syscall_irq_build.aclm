@@ -1,0 +1,6 @@
+target:baremetal
+kernel:idt_install
+kernel:irq_full_save_on
+kernel:syscall_init
+kernel:tick_install
+chip:halt

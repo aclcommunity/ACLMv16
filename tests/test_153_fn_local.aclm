@@ -1,0 +1,13 @@
+fn: bump
+  local: tmp = 8
+  cpu:set tmp = 41
+  cpu:add tmp = 1
+  ret tmp
+end:fn
+
+call ~bump
+cmp reg1, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

@@ -1,0 +1,21 @@
+kernel:dma_ring_init 8
+cpu:set reg2 = 0x1234
+kernel:dma_ring_push reg2, 7
+cmp reg1, 0
+jump_if neq ~f1
+kernel:dma_ring_pop reg4, reg5
+cmp reg1, 0
+jump_if neq ~f2
+cmp reg4, 0x1234
+jump_if neq ~f3
+cmp reg5, 7
+jump_if neq ~f4
+sys:call exit 0
+~f1
+sys:call exit 1
+~f2
+sys:call exit 2
+~f3
+sys:call exit 3
+~f4
+sys:call exit 4

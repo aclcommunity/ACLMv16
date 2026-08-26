@@ -1,0 +1,5 @@
+data:alloc mx = 16
+cpu:set reg1 = mx
+cpu:stmxcsr reg1
+cpu:ldmxcsr reg1
+sys:call exit 0

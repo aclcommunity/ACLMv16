@@ -1,0 +1,7 @@
+sys:call getpid
+err:status reg1
+cmp reg1, 0
+jump_if gt ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

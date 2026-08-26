@@ -1,0 +1,22 @@
+data:alloc buf = 32
+ram:write8 [buf + 0] = 0x11
+ram:write16 [buf + 2] = 0x2233
+ram:write32 [buf + 4] = 0x44556677
+ram:write [buf + 8] = 0x1122334455667788
+ram:read8 reg1 = [buf + 0]
+cmp reg1, 0x11
+jump_if neq ~fail
+ram:read16 reg1 = [buf + 2]
+cmp reg1, 0x2233
+jump_if neq ~fail
+ram:read32 reg1 = [buf + 4]
+cmp reg1, 0x44556677
+jump_if neq ~fail
+ram:read reg1 = [buf + 8]
+cpu:set reg2 = 0x1122334455667788
+cmp reg1, reg2
+jump_if eq ~ok
+~fail
+sys:call exit 1
+~ok
+sys:call exit 0

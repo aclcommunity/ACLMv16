@@ -1,0 +1,8 @@
+cpu:set reg11 = 1
+cpu:set reg12 = 2
+cpu:add reg11 = reg12
+cmp reg11, 3
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

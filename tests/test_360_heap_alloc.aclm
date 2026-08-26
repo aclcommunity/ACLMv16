@@ -1,0 +1,9 @@
+kernel:heap_init 256
+kernel:heap_alloc reg1 = 16
+kernel:heap_alloc reg2 = 8
+cpu:sub reg2 = reg1
+cmp reg2, 16
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

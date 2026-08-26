@@ -1,0 +1,9 @@
+cpu:set rdx = 7
+cpu:set reg3 = 6
+cpu:mulx reg1, reg2 = reg3
+# 7*6=42 in lo
+cmp reg2, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

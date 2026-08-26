@@ -1,0 +1,3 @@
+cpu:set rcx = 0
+cpu:xgetbv
+sys:call exit 0

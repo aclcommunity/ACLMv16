@@ -1,0 +1,4 @@
+# build-only: port access may fault in userspace without IOPL
+chip:kbd_poll reg1
+chip:int 3
+sys:call exit 0

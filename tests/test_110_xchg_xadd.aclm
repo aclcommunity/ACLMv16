@@ -1,0 +1,18 @@
+cpu:set reg1 = 10
+cpu:set reg2 = 20
+cpu:xchg reg1, reg2
+cmp reg1, 20
+jump_if neq ~f
+cmp reg2, 10
+jump_if neq ~f
+cpu:set reg3 = 5
+cpu:set reg4 = 7
+cpu:xadd reg3 = reg4
+# reg3 was 5+7=12, reg4 was old 5
+cmp reg3, 12
+jump_if neq ~f
+cmp reg4, 5
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

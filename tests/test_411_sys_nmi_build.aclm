@@ -1,0 +1,9 @@
+target:baremetal
+kernel:idt_install
+kernel:syscall_table_init
+kernel:syscall_register 1, ~sys_write
+kernel:nmi_install
+chip:halt
+~sys_write
+cpu:set reg1 = 0
+ret

@@ -1,0 +1,11 @@
+data:alloc buf = 32
+cpu:set reg1 = buf
+cpu:set reg2 = 0x3f800000
+ram:write32 [reg1 + 0] = reg2
+ram:write32 [reg1 + 4] = reg2
+ram:write32 [reg1 + 8] = reg2
+ram:write32 [reg1 + 12] = reg2
+vec:vload ymm0 = [reg1]
+vec:vshufps ymm0 = ymm0, 0
+vec:vstore [reg1] = ymm0
+sys:call exit 0

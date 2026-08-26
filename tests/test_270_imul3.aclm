@@ -1,0 +1,7 @@
+cpu:set reg2 = 7
+cpu:imul3 reg1 = reg2, 6
+cmp reg1, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

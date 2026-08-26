@@ -1,0 +1,19 @@
+cpu:set reg1 = 5
+cpu:set reg2 = 10
+cmp reg1, reg2
+jump_if lt ~lt_ok
+sys:call exit 1
+~lt_ok
+cmp reg2, reg1
+jump_if gt ~gt_ok
+sys:call exit 2
+~gt_ok
+cmp reg1, 5
+jump_if eq ~eq_ok
+sys:call exit 3
+~eq_ok
+cmp reg1, 6
+jump_if neq ~ok
+sys:call exit 4
+~ok
+sys:call exit 0

@@ -1,0 +1,32 @@
+# Every virtual reg set + high-reg zero compare
+cpu:set reg1 = 1
+cpu:set reg2 = 2
+cpu:set reg3 = 3
+cpu:set reg4 = 4
+cpu:set reg5 = 5
+cpu:set reg6 = 6
+cpu:set reg7 = 0
+cpu:set reg8 = 0
+cpu:set reg9 = 0
+cpu:set reg10 = 0
+cpu:set reg11 = 0
+cpu:set reg12 = 0
+cpu:set reg13 = 0
+cpu:set reg13 = 0
+cmp reg7, 0
+jump_if neq ~fail
+cmp reg11, 0
+jump_if neq ~fail
+cmp reg13, 0
+jump_if neq ~fail
+cpu:add reg1 = reg2
+cpu:add reg1 = reg3
+cpu:add reg1 = reg4
+cpu:add reg1 = reg5
+cpu:add reg1 = reg6
+cmp reg1, 21
+jump_if eq ~ok
+~fail
+sys:call exit 1
+~ok
+sys:call exit 0

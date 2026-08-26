@@ -1,0 +1,19 @@
+data:const path = "/dev/zero"
+cpu:set reg11 = path
+cpu:set reg12 = 0
+cpu:set reg13 = 0
+sys:call open reg11 reg12 reg13
+cpu:set reg8 = rax
+cmp reg8, 0
+jump_if lt ~f
+cell:mapfile reg9 = 4096, reg8, 0, 1
+cmp reg9, 0
+jump_if lt ~f
+ram:read8 reg10 = [reg9]
+cmp reg10, 0
+jump_if neq ~f
+cell:free reg9, 4096
+sys:call close reg8
+sys:call exit 0
+~f
+sys:call exit 1

@@ -1,0 +1,5 @@
+cpu:set rax = 0xFF
+cpu:cbw
+cpu:cwde
+cpu:cwd
+sys:call exit 0

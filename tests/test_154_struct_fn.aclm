@@ -1,0 +1,27 @@
+struct: Pair
+  a : i64
+  b : i64
+end:struct
+
+data:alloc p = Pair
+
+fn: init_pair
+  cpu:set reg3 = p
+  ram:write [reg3 + Pair.a] = reg1
+  ram:write [reg3 + Pair.b] = reg2
+  ret
+end:fn
+
+cpu:set reg1 = 100
+cpu:set reg2 = 200
+call ~init_pair reg1, reg2
+cpu:set reg4 = p
+ram:read reg5 = [reg4 + Pair.a]
+cmp reg5, 100
+jump_if neq ~f
+ram:read reg6 = [reg4 + Pair.b]
+cmp reg6, 200
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

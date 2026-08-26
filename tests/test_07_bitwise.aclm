@@ -1,0 +1,29 @@
+cpu:set reg1 = 0xff
+cpu:and reg1 = 0x0f
+cmp reg1, 15
+jump_if neq ~fail
+cpu:or reg1 = 0xf0
+cmp reg1, 255
+jump_if neq ~fail
+cpu:xor reg1 = 0xff
+cmp reg1, 0
+jump_if neq ~fail
+cpu:set reg2 = 1
+cpu:shl reg2 = 3
+cmp reg2, 8
+jump_if neq ~fail
+cpu:shr reg2 = 1
+cmp reg2, 4
+jump_if neq ~fail
+cpu:not reg2
+cpu:inc reg2
+cmp reg2, -4
+jump_if neq ~fail
+cpu:set reg3 = 5
+cpu:neg reg3
+cmp reg3, -5
+jump_if eq ~ok
+~fail
+sys:call exit 1
+~ok
+sys:call exit 0

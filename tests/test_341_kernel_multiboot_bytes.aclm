@@ -1,0 +1,3 @@
+target:baremetal
+cpu:set eax = 0
+chip:halt

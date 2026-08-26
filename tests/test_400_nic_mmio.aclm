@@ -1,0 +1,18 @@
+data:alloc fake = 64
+ram:write32 [fake + 0] = 0xDEAD
+cpu:set reg1 = fake
+kernel:nic_bar reg1
+kernel:nic_reg_read reg2 = 0
+cpu:set reg3 = 0xDEAD
+cmp reg2, reg3
+jump_if eq ~ok
+sys:call exit 1
+~ok
+kernel:nic_reg_write 4 = 0xBEEF
+kernel:nic_reg_read reg2 = 4
+cpu:set reg3 = 0xBEEF
+cmp reg2, reg3
+jump_if eq ~ok2
+sys:call exit 2
+~ok2
+sys:call exit 0

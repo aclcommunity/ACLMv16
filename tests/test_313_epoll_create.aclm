@@ -1,0 +1,6 @@
+net:epoll_create reg11 = 0
+cmp reg11, 0
+jump_if lt ~f
+sys:call exit 0
+~f
+sys:call exit 1

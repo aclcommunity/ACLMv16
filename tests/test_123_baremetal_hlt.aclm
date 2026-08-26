@@ -1,0 +1,2 @@
+target:baremetal
+chip:halt

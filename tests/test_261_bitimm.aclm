@@ -1,0 +1,17 @@
+cpu:set reg1 = 0
+cpu:btsimm reg1, 5
+cmp reg1, 32
+jump_if eq ~ok1
+sys:call exit 1
+~ok1
+cpu:btrimm reg1, 5
+cmp reg1, 0
+jump_if eq ~ok2
+sys:call exit 2
+~ok2
+cpu:btcimm reg1, 3
+cmp reg1, 8
+jump_if eq ~ok3
+sys:call exit 3
+~ok3
+sys:call exit 0

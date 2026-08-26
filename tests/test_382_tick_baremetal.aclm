@@ -1,0 +1,5 @@
+target:baremetal
+kernel:idt_install
+kernel:tick_install
+kernel:tick_read reg1
+chip:halt

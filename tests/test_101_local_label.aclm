@@ -1,0 +1,10 @@
+cpu:set reg1 = 0
+~@loop
+cpu:add reg1 = 1
+cmp reg1, 5
+jump_if lt ~@loop
+cmp reg1, 5
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

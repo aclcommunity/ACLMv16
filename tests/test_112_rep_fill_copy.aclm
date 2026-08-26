@@ -1,0 +1,16 @@
+data:alloc a = 32
+data:alloc b = 32
+cpu:set reg1 = a
+blast:rep_fill reg1 = 65, 8
+ram:read8 reg2 = [a + 0]
+cmp reg2, 65
+jump_if neq ~f
+cpu:set reg3 = b
+cpu:set reg4 = a
+blast:rep_copy reg3 = reg4, 8
+ram:read8 reg5 = [b + 0]
+cmp reg5, 65
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

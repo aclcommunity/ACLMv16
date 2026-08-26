@@ -1,0 +1,6 @@
+data:alloc buf = 64
+cpu:set reg1 = buf
+cpu:prefetch nta reg1
+cpu:prefetch w reg1
+cpu:clflush reg1
+sys:call exit 0

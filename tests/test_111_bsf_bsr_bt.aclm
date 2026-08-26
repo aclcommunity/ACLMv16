@@ -1,0 +1,17 @@
+cpu:set reg1 = 0x28
+cpu:bsf reg2 = reg1
+# bit 3 set first
+cmp reg2, 3
+jump_if neq ~f
+cpu:bsr reg3 = reg1
+cmp reg3, 5
+jump_if neq ~f
+cpu:set reg4 = 0x28
+cpu:bt reg4, 3
+flag:setcc reg5 = below
+# BT sets CF; below = CF=1
+cmp reg5, 1
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

@@ -1,0 +1,13 @@
+# Hardware register names as aliases
+cpu:set rax = 10
+cpu:set rbx = 20
+cpu:add rax = rbx
+cmp rax, 30
+jump_if neq ~fail
+cpu:set r14 = 0
+cmp r14, 0
+jump_if eq ~ok
+~fail
+sys:call exit 1
+~ok
+sys:call exit 0

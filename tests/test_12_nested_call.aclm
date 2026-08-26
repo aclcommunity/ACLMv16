@@ -1,0 +1,15 @@
+cpu:set reg2 = 3
+cpu:set reg3 = 4
+call ~mul_add reg2, reg3
+cmp reg1, 19
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0
+
+~mul_add
+# rdi=3 rsi=4 -> 3*4 + 7 = 19
+cpu:set reg1 = rdi
+cpu:mul reg1 = rsi
+cpu:add reg1 = 7
+ret

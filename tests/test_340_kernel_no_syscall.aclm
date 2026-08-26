@@ -1,0 +1,3 @@
+# Must FAIL to build if someone uses sys:call under baremetal
+target:baremetal
+sys:call exit 0

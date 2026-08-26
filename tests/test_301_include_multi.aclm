@@ -1,0 +1,8 @@
+include: "helpers_inc.aclm"
+cpu:set reg11 = 40
+cpu:add reg11 = 2
+cmp reg11, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

@@ -1,0 +1,21 @@
+# multiple locals, arithmetic, restore after call
+fn: compute
+  local: a = 8
+  local: b = 8
+  local: c = 8
+  cpu:set a = 5
+  cpu:set b = 7
+  cpu:set c = a
+  cpu:add c = b
+  cpu:mul c = 3
+  ret c
+end:fn
+cpu:set reg5 = 99
+call ~compute
+cmp reg1, 36
+jump_if neq ~f
+cmp reg5, 99
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

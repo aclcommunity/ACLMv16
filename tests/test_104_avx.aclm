@@ -1,0 +1,20 @@
+data:alloc buf = 32
+cpu:set reg1 = buf
+cpu:set reg2 = 0x3f800000
+ram:write32 [reg1 + 0] = reg2
+ram:write32 [reg1 + 4] = reg2
+ram:write32 [reg1 + 8] = reg2
+ram:write32 [reg1 + 12] = reg2
+ram:write32 [reg1 + 16] = reg2
+ram:write32 [reg1 + 20] = reg2
+ram:write32 [reg1 + 24] = reg2
+ram:write32 [reg1 + 28] = reg2
+vec:vload ymm0 = [reg1]
+vec:vaddps ymm0 = ymm0
+vec:vstore [reg1] = ymm0
+ram:read32 reg3 = [reg1 + 0]
+cmp reg3, 0x40000000
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

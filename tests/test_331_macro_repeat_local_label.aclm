@@ -1,0 +1,15 @@
+macro: dec_loop x
+cpu:set reg9 = $x
+~@loop
+cpu:sub reg9 = 1
+cmp reg9, 0
+jump_if gt ~@loop
+end:macro
+
+dec_loop 3
+dec_loop 3
+cmp reg9, 0
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

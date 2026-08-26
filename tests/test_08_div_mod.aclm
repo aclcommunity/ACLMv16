@@ -1,0 +1,16 @@
+cpu:set reg1 = 100
+cpu:div reg1 = 7
+cmp reg1, 14
+jump_if neq ~fail
+cpu:set reg1 = 100
+cpu:mod reg1 = 7
+cmp reg1, 2
+jump_if neq ~fail
+cpu:set reg2 = 17
+cpu:div reg2 = 3
+cmp reg2, 5
+jump_if eq ~ok
+~fail
+sys:call exit 1
+~ok
+sys:call exit 0

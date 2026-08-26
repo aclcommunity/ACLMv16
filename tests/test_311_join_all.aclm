@@ -1,0 +1,8 @@
+thread:spawn reg11 = ~w1
+thread:spawn reg12 = ~w2
+thread:join_all
+sys:call exit 0
+~w1
+thread:exit 0
+~w2
+thread:exit 0

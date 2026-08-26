@@ -1,0 +1,22 @@
+cpu:set rax = 10
+cpu:set reg2 = 10
+cpu:set reg3 = 99
+cpu:cmpxchg reg2, reg3
+cmp reg2, 99
+jump_if eq ~ok
+sys:call exit 1
+~ok
+# fail path
+cpu:set rax = 1
+cpu:set reg2 = 5
+cpu:set reg3 = 99
+cpu:cmpxchg reg2, reg3
+cmp reg2, 5
+jump_if eq ~ok2
+sys:call exit 2
+~ok2
+cmp rax, 5
+jump_if eq ~ok3
+sys:call exit 3
+~ok3
+sys:call exit 0

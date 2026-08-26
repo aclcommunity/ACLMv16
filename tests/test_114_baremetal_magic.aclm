@@ -1,0 +1,4 @@
+# Build-only: Multiboot header must be present; freestanding halt
+target:baremetal
+chip:cli
+chip:halt

@@ -1,0 +1,9 @@
+target:baremetal
+kernel:idt_install
+kernel:pf_install
+kernel:tick_install
+data:alloc ustk = 4096
+cpu:set reg1 = 0
+cpu:set reg2 = ustk
+kernel:preempt_arm reg2
+chip:halt

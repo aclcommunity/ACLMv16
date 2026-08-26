@@ -1,0 +1,5 @@
+target:baremetal
+data:const m = "OK"
+chip:serial_init
+kernel:printk_str m
+kernel:panic

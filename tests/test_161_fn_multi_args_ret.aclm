@@ -1,0 +1,23 @@
+# multi-arg fn, return value, nested call
+fn: sum3 a b c
+  cpu:set reg1 = a
+  cpu:add reg1 = b
+  cpu:add reg1 = c
+  ret reg1
+end:fn
+fn: double x
+  cpu:set reg1 = x
+  cpu:add reg1 = x
+  ret reg1
+end:fn
+cpu:set reg1 = 10
+cpu:set reg2 = 20
+cpu:set reg3 = 12
+call ~sum3 reg1, reg2, reg3
+# result in rax/reg1 = 42
+call ~double reg1
+cmp reg1, 84
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

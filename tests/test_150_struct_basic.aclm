@@ -1,0 +1,20 @@
+struct: Point
+  x : i32
+  y : i32
+end:struct
+
+data:alloc p = Point
+cpu:set reg1 = p
+cpu:set reg2 = 10
+ram:write32 [reg1 + Point.x] = reg2
+cpu:set reg3 = 20
+ram:write32 [reg1 + Point.y] = reg3
+ram:read32 reg4 = [reg1 + Point.x]
+cmp reg4, 10
+jump_if neq ~f
+ram:read32 reg5 = [reg1 + Point.y]
+cmp reg5, 20
+jump_if neq ~f
+sys:call exit 0
+~f
+sys:call exit 1

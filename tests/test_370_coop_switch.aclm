@@ -1,0 +1,15 @@
+data:alloc a = 128
+data:alloc b = 128
+cpu:set reg1 = a
+cpu:set reg2 = b
+cpu:set reg3 = 9
+kernel:ctx_save reg1
+cpu:set reg3 = 1
+kernel:ctx_save reg2
+cpu:set reg3 = 0
+kernel:coop_switch reg2, reg1
+cmp reg3, 9
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

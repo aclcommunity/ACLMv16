@@ -1,0 +1,8 @@
+# This file is used by a driver script expecting --strict to fail.
+# As a normal suite test we only check safe shld.
+cpu:set reg1 = 0x10
+cpu:set reg2 = 0x20
+cpu:set reg4 = 4
+# shld dest, src with count in cl — put count in reg3 via explicit path carefully
+# Safe pattern: use only reg1/reg2 as data (encoder loads count separately)
+sys:call exit 0

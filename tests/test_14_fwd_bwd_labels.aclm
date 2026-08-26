@@ -1,0 +1,14 @@
+goto ~skip
+cpu:set reg1 = 99
+sys:call exit 1
+~skip
+cpu:set reg1 = 1
+goto ~end
+~mid
+sys:call exit 2
+~end
+cmp reg1, 1
+jump_if eq ~done
+sys:call exit 3
+~done
+sys:call exit 0

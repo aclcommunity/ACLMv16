@@ -1,0 +1,4 @@
+data:alloc buf = 16
+ram:write8 [buf + 0] = 65
+ram:read8 reg1 = [buf + 0]
+sys:call exit reg1

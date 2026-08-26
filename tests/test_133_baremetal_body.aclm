@@ -1,0 +1,4 @@
+target:baremetal
+cpu:set reg1 = 0
+chip:cli
+chip:halt

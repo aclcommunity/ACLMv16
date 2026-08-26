@@ -1,0 +1,5 @@
+target:baremetal
+chip:serial_init
+chip:serial_putc 65
+chip:serial_putc 10
+chip:halt

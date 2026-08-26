@@ -1,0 +1,8 @@
+kernel:net_init
+kernel:net_poll reg1
+cmp reg1, 0
+jump_if neq ~bad
+kernel:cs_ring reg2
+sys:call exit 0
+~bad
+sys:call exit 1

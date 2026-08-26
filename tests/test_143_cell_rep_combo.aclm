@@ -1,0 +1,28 @@
+# Combo: cell:map with size in rdi + rep fill/copy with overlapping regs
+cpu:set rdi = 4096
+cell:map rsi = rdi
+cmp rsi, 0
+jump_if lt ~f
+cpu:set rax = 0x42
+cpu:set rcx = 16
+cpu:set rdi = rsi
+blast:rep_fill rdi = rax, rcx
+ram:read8 reg8 = [rsi + 0]
+cmp reg8, 0x42
+jump_if neq ~f
+cpu:set reg10 = rsi
+cpu:set rdi = rsi
+cpu:add rdi = 16
+cpu:set rcx = 8
+blast:rep_copy rdi = rsi, rcx
+ram:read8 reg9 = [reg10 + 16]
+cmp reg9, 0x42
+jump_if neq ~f
+cpu:set reg11 = reg10
+cpu:add reg11 = 16
+cmp rdi, reg11
+jump_if neq ~f
+cell:free reg10, 4096
+sys:call exit 0
+~f
+sys:call exit 1

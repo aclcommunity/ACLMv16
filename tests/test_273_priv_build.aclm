@@ -1,0 +1,6 @@
+# encode-only privileged / system ops
+cpu:sldt reg1
+cpu:str reg2
+cpu:smsw reg3
+cpu:swapgs
+sys:call exit 0

@@ -1,0 +1,10 @@
+macro: bump dest
+cpu:add $dest = 1
+end:macro
+cpu:set reg1 = 41
+bump reg1
+cmp reg1, 42
+jump_if eq ~ok
+sys:call exit 1
+~ok
+sys:call exit 0

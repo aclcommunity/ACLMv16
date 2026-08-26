@@ -1,0 +1,13 @@
+stack:push 42
+stack:push 7
+stack:pop reg2
+cmp reg2, 7
+jump_if eq ~ok1
+sys:call exit 1
+~ok1
+stack:pop reg2
+cmp reg2, 42
+jump_if eq ~ok2
+sys:call exit 2
+~ok2
+sys:call exit 0

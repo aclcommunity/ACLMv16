@@ -1,0 +1,8 @@
+# AF_INET=2 SOCK_STREAM=1 protocol=0
+net:socket reg1 = 2, 1, 0
+cmp reg1, 0
+jump_if lt ~f
+net:close reg1
+sys:call exit 0
+~f
+sys:call exit 1

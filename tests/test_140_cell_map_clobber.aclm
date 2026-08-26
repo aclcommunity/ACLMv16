@@ -1,0 +1,15 @@
+# Hard test: size lives in rdi (which cell:map must not clobber before reading)
+cpu:set rdi = 4096
+cell:map reg1 = rdi
+cmp reg1, 0
+jump_if lt ~f
+# write a marker
+cpu:set reg2 = 0x41
+ram:write8 [reg1 + 0] = reg2
+ram:read8 reg3 = [reg1 + 0]
+cmp reg3, 0x41
+jump_if neq ~f
+cell:free reg1, 4096
+sys:call exit 0
+~f
+sys:call exit 1

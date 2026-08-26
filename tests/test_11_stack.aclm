@@ -1,0 +1,14 @@
+cpu:set reg1 = 100
+cpu:set reg2 = 200
+stack:push reg1
+stack:push reg2
+stack:pop reg3
+stack:pop reg4
+cmp reg3, 200
+jump_if neq ~fail
+cmp reg4, 100
+jump_if eq ~ok
+~fail
+sys:call exit 1
+~ok
+sys:call exit 0
